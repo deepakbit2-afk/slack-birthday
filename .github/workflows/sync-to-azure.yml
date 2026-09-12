@@ -37,3 +37,6 @@ jobs:
 
           git -c http.extraheader="$auth_header" push "$azure_url" "HEAD:refs/heads/$SOURCE_BRANCH"
           git -c http.extraheader="$auth_header" push "$azure_url" --tags
+
+
+          
