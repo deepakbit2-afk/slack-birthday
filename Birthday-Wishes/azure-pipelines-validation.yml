@@ -1,0 +1,35 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  pythonVersion: "3.11"
+
+steps:
+  - checkout: self
+
+  - task: UsePythonVersion@0
+    displayName: Use Python $(pythonVersion)
+    inputs:
+      versionSpec: "$(pythonVersion)"
+      architecture: x64
+
+  - bash: |
+      set -euo pipefail
+      python -m pip install --upgrade pip
+      python -m pip install -r requirements.txt
+    displayName: Install dependencies
+
+  - bash: |
+      set -euo pipefail
+      python -m py_compile src/birthday_wishes.py
+    displayName: Validate Python syntax
