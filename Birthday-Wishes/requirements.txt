@@ -1,0 +1,8 @@
+# Core PySpark
+pyspark==4.2.0
+
+# Slack HTTP calls
+requests==2.31.0
+
+# Local dev: load secrets from .env file
+python-dotenv==1.0.0

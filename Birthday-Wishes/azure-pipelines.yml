@@ -1,0 +1,45 @@
+trigger: none
+pr: none
+
+# Azure DevOps evaluates schedules in UTC.
+schedules:
+  - cron: "0 3 * * *"
+    displayName: Daily birthday wishes
+    branches:
+      include:
+        - main
+    always: true
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  pythonVersion: "3.11"
+
+steps:
+  - checkout: self
+
+  - task: UsePythonVersion@0
+    displayName: Use Python $(pythonVersion)
+    inputs:
+      versionSpec: "$(pythonVersion)"
+      architecture: x64
+
+  - bash: |
+      set -euo pipefail
+      java -version
+      python -m pip install --upgrade pip
+      python -m pip install -r requirements.txt
+    displayName: Install Python and Spark dependencies
+
+  - bash: |
+      set -euo pipefail
+      if [ -z "${SLACK_WEBHOOK_URL:-}" ]; then
+        echo "SLACK_WEBHOOK_URL is not configured in the pipeline."
+        exit 1
+      fi
+      python src/birthday_wishes.py
+    displayName: Send birthday wishes
+    env:
+      SLACK_WEBHOOK_URL: $(SLACK_WEBHOOK_URL)
+      CSV_PATH: $(Build.SourcesDirectory)/data/employees.csv
