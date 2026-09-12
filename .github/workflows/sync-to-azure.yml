@@ -33,7 +33,6 @@ jobs:
             echo "AZURE_DEVOPS_PAT is not configured."
             exit 1
           fi
-
           azure_url="https://dev.azure.com/${AZURE_DEVOPS_ORG}/${AZURE_DEVOPS_PROJECT}/_git/${AZURE_DEVOPS_REPOSITORY}"
 
           echo "Azure target: $azure_url"
