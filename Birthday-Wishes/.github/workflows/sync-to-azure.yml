@@ -1,0 +1,44 @@
+name: Sync GitHub to Azure Repos
+
+on:
+  push:
+    branches:
+      - "**"
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout complete Git history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push branch and tags to Azure Repos
+        env:
+          AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
+          AZURE_DEVOPS_ORG: Deepaksingh0643
+          AZURE_DEVOPS_PROJECT: Pipelines
+          AZURE_DEVOPS_REPOSITORY: Pipelines
+          SOURCE_BRANCH: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$AZURE_DEVOPS_PAT" ]; then
+            echo "AZURE_DEVOPS_PAT is not configured in GitHub repository secrets."
+            exit 1
+          fi
+
+          azure_url="https://dev.azure.com/${AZURE_DEVOPS_ORG}/${AZURE_DEVOPS_PROJECT}/_git/${AZURE_DEVOPS_REPOSITORY}"
+          encoded_auth="$(printf ':%s' "$AZURE_DEVOPS_PAT" | base64 -w 0)"
+          auth_header="AUTHORIZATION: Basic $encoded_auth"
+          echo "Azure target: $azure_url"
+          echo "PAT received: yes (length ${#AZURE_DEVOPS_PAT})"
+
+          git -c credential.interactive=never -c core.askPass= -c http.extraheader="$auth_header" \
+            push "$azure_url" "HEAD:refs/heads/$SOURCE_BRANCH"
+          git -c credential.interactive=never -c core.askPass= -c http.extraheader="$auth_header" \
+            push "$azure_url" --tags
