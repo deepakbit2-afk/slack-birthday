@@ -141,6 +141,33 @@ day; dependency installation is included in each run.
 To change the run time, edit the cron expression in `azure-pipelines.yml`.
 Azure DevOps interprets it as UTC.
 
+### Windows self-hosted agent
+
+The pipeline can run on your Windows computer without hosted parallelism. The
+YAML uses the `Default` self-hosted agent pool and PowerShell steps. Set it up
+once in Azure DevOps:
+
+1. Open **Organization settings** → **Agent pools** → **Default** → **New agent**.
+2. Select **Windows**, download the agent, and extract it to a folder such as
+  `C:\agent`.
+3. Open PowerShell as Administrator and run the downloaded `config.cmd`.
+4. Enter the organization URL, choose the `Default` pool, and authenticate
+  with a PAT that has **Agent Pools: Read & manage** permission.
+5. When asked whether to run as a service, answer `Y`, then start the service.
+6. Confirm the agent is **Online** under **Organization settings** → **Agent
+  pools** → **Default** → **Agents**.
+
+Install Python 3.11+ and Java 11, 17, or 21 on that computer, and verify:
+
+```powershell
+python --version
+java -version
+```
+
+The computer must be powered on and connected to the internet at 03:00 UTC.
+After the agent is online, create or edit the Azure pipeline using
+`/Birthday-Wishes/azure-pipelines.yml` and run it once manually.
+
 ### Create and push the Azure Repos repository
 
 The script `push-to-azure.ps1` creates the Azure Repos repository (and can also
