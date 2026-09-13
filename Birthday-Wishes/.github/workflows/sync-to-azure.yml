@@ -33,12 +33,22 @@ jobs:
           fi
 
           azure_url="https://dev.azure.com/${AZURE_DEVOPS_ORG}/${AZURE_DEVOPS_PROJECT}/_git/${AZURE_DEVOPS_REPOSITORY}"
-          encoded_auth="$(printf ':%s' "$AZURE_DEVOPS_PAT" | base64 -w 0)"
-          auth_header="AUTHORIZATION: Basic $encoded_auth"
           echo "Azure target: $azure_url"
           echo "PAT received: yes (length ${#AZURE_DEVOPS_PAT})"
 
-          git -c credential.interactive=never -c core.askPass= -c http.extraheader="$auth_header" \
+          encoded_auth="$(printf ':%s' "$AZURE_DEVOPS_PAT" | base64 -w 0)"
+          auth_header="AUTHORIZATION: Basic $encoded_auth"
+          curl --fail-with-body --silent --show-error \
+            --user "pat:$AZURE_DEVOPS_PAT" \
+            "https://dev.azure.com/${AZURE_DEVOPS_ORG}/_apis/projects?api-version=7.1" \
+            -o /dev/null
+
+          encoded_auth="$(printf 'pat:%s' "$AZURE_DEVOPS_PAT" | base64 -w 0)"
+          auth_header="Authorization: Basic $encoded_auth"
+
+          git -c credential.interactive=never \
+            -c http.extraheader="$auth_header" \
             push "$azure_url" "HEAD:refs/heads/$SOURCE_BRANCH"
-          git -c credential.interactive=never -c core.askPass= -c http.extraheader="$auth_header" \
+          git -c credential.interactive=never \
+            -c http.extraheader="$auth_header" \
             push "$azure_url" --tags

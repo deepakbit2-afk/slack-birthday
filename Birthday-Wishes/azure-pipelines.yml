@@ -31,6 +31,7 @@ steps:
       python -m pip install --upgrade pip
       python -m pip install -r requirements.txt
     displayName: Install Python and Spark dependencies
+    workingDirectory: $(Build.SourcesDirectory)/Birthday-Wishes
 
   - bash: |
       set -euo pipefail
@@ -40,6 +41,7 @@ steps:
       fi
       python src/birthday_wishes.py
     displayName: Send birthday wishes
+    workingDirectory: $(Build.SourcesDirectory)/Birthday-Wishes
     env:
       SLACK_WEBHOOK_URL: $(SLACK_WEBHOOK_URL)
-      CSV_PATH: $(Build.SourcesDirectory)/data/employees.csv
+      CSV_PATH: $(Build.SourcesDirectory)/Birthday-Wishes/data/employees.csv
