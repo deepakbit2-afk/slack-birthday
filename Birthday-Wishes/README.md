@@ -168,6 +168,11 @@ The computer must be powered on and connected to the internet at 03:00 UTC.
 After the agent is online, create or edit the Azure pipeline using
 `/Birthday-Wishes/azure-pipelines.yml` and run it once manually.
 
+The pipeline currently prints `Energetic Demo User` every day as a print-only
+demo birthday. It does not send a Slack message for that demo name. Remove the
+`DEMO_DAILY_BIRTHDAY_NAME` line from the YAML when you want only real employee
+birthdays from the CSV.
+
 ### Create and push the Azure Repos repository
 
 The script `push-to-azure.ps1` creates the Azure Repos repository (and can also

@@ -40,3 +40,4 @@ steps:
     env:
       SLACK_WEBHOOK_URL: $(SLACK_WEBHOOK_URL)
       CSV_PATH: $(Build.SourcesDirectory)/Birthday-Wishes/data/employees.csv
+      DEMO_DAILY_BIRTHDAY_NAME: Energetic Demo User

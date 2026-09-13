@@ -9,6 +9,7 @@ PySpark script that:
 Configuration via environment variables (or .env file for local testing):
   SLACK_WEBHOOK_URL  - Slack Incoming Webhook URL
   CSV_PATH           - Path to the employees CSV file (default: data/employees.csv)
+    DEMO_DAILY_BIRTHDAY_NAME - Optional print-only demo name for daily testing
 """
 
 import os
@@ -30,6 +31,7 @@ from pyspark.sql.types import StructType, StructField, StringType
 load_dotenv()  # loads from .env file if present (local dev only)
 
 SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL", "")
+DEMO_DAILY_BIRTHDAY_NAME = os.getenv("DEMO_DAILY_BIRTHDAY_NAME", "")
 _csv_env = os.getenv("CSV_PATH", "")
 CSV_PATH = _csv_env if _csv_env else os.path.join(os.path.dirname(__file__), "..", "data", "employees.csv")
 
@@ -189,6 +191,9 @@ def run():
     birthday_count = birthday_df.count()
 
     print(f"\n[INFO] Employees with birthday today ({today.strftime('%d-%b')}): {birthday_count}")
+
+    if DEMO_DAILY_BIRTHDAY_NAME:
+        print(f"[DEMO] Birthday today: {DEMO_DAILY_BIRTHDAY_NAME} (print-only; no Slack message)")
 
     if birthday_count == 0:
         print("[INFO] No birthdays today. No messages to send. 🎈")
