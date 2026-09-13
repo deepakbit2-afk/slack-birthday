@@ -64,4 +64,7 @@ if (-not $branch) {
 
 Write-Host "Pushing '$branch' to $azureRemote ..."
 git push --set-upstream azure $branch
+if ($LASTEXITCODE -ne 0) {
+    throw "Azure push failed. Resolve the remote history conflict and run the script again."
+}
 Write-Host "Azure DevOps repository is ready: $azureRemote"
