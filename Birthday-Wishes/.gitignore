@@ -23,3 +23,7 @@ spark-warehouse/
 # OS
 .DS_Store
 Thumbs.db
+
+# Local watcher and Office temporary files
+watcher-test.txt
+~$*

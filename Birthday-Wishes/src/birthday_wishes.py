@@ -23,7 +23,6 @@ from dotenv import load_dotenv
 
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
-from pyspark.sql.types import StructType, StructField, StringType
 
 # ---------------------------------------------------------------------------
 # Load config from environment variables

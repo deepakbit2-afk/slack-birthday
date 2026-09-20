@@ -14,6 +14,7 @@ Birthday-Wishes/
 │   └── employees.csv          # Employee data (name, dob, email)
 ├── src/
 │   └── birthday_wishes.py     # Main PySpark script
+├── watch-and-push.py          # Optional local change watcher
 ├── requirements.txt           # Python dependencies
 ├── .env.example               # Template for local secrets
 └── README.md
@@ -74,6 +75,28 @@ Your Name,YYYY-MM-DD,your@email.com
 ```bash
 python src/birthday_wishes.py
 ```
+
+### 5. Automatically push local changes to GitHub
+
+After installing the dependencies, start the optional local watcher from the
+`Birthday-Wishes` directory:
+
+```powershell
+python watch-and-push.py
+```
+
+The watcher waits 10 seconds after the last file change, then stages all
+repository changes, creates an `Automatic local sync` commit, and pushes the
+current branch to `origin`. Change the delay when needed:
+
+```powershell
+python watch-and-push.py --debounce 5
+```
+
+Git authentication must already work with `git push origin main`. Do not keep
+webhook URLs, PATs, temporary documents, or generated files in the repository;
+add them to `.gitignore` before enabling automatic commits. Press `Ctrl+C` to
+stop the watcher. Windows Task Scheduler can start this command at logon.
 
 ---
 
@@ -173,77 +196,12 @@ demo birthday. It does not send a Slack message for that demo name. Remove the
 `DEMO_DAILY_BIRTHDAY_NAME` line from the YAML when you want only real employee
 birthdays from the CSV.
 
-### Create and push the Azure Repos repository
+### Repository synchronization
 
-The script `push-to-azure.ps1` creates the Azure Repos repository (and can also
-create the project), adds it as the `azure` Git remote, commits local changes,
-and pushes the current branch. It does not remove or change the existing
-GitHub `origin` remote.
-
-First authenticate with Azure CLI:
-
-```powershell
-az login
-az extension add --name azure-devops
-az devops login --organization https://dev.azure.com/Deepaksingh0643
-```
-
-Run this once from the project directory only if the Azure repository still
-needs its initial code push. The script is already configured for your Azure
-DevOps project and repository named `Pipelines`:
-
-```powershell
-.\push-to-azure.ps1
-```
-
-`-CreateProject` is optional and requires permission to create projects. The
-`Pipelines` project already exists, so the switch is not needed. The first
-`git push` may request Azure DevOps credentials; use a Personal Access Token
-with Code read/write permission, or let Git Credential Manager store them.
-
-### Continuous GitHub-to-Azure sync from PowerShell
-
-If new commits are pushed to the existing GitHub `origin` repository and you
-want a local PowerShell process to mirror them into Azure Repos, run:
-
-```powershell
-.\watch-and-sync-to-azure.ps1
-```
-
-It checks for changes every 60 seconds and syncs all branches and tags. Keep
-the PowerShell window open; press `Ctrl+C` to stop it. To change the interval:
-
-```powershell
-.\watch-and-sync-to-azure.ps1 -IntervalSeconds 300
-```
-
-This watcher requires that `push-to-azure.ps1` has already created and
-authenticated the `azure` remote. For a server-side solution that does not
-depend on your Windows PC being on, use a GitHub Actions workflow or an Azure
-DevOps GitHub connection instead.
-
-### GitHub Actions sync (recommended)
-
-The repository also includes `.github/workflows/sync-to-azure.yml`. It runs on
-every GitHub push and sends that branch and its tags to the Azure Repos project
-`Pipelines`. No local watcher or extra software is required.
-
-Configure it once in GitHub:
-
-1. In Azure DevOps, create a Personal Access Token with **Code: Read & write**
-  permission. Copy it immediately; Azure will not show it again.
-2. In GitHub, open **Settings** → **Secrets and variables** → **Actions** →
-  **New repository secret**.
-3. Set the secret name to `AZURE_DEVOPS_PAT` and paste the PAT as its value.
-4. Push a commit to GitHub. Open the repository's **Actions** tab and confirm
-  the **Sync GitHub to Azure Repos** workflow succeeds.
-
-The workflow uses the existing Azure organization `Deepaksingh0643`, project
-`Pipelines`, and repository `Pipelines`. A Service Principal and local
-software installation are not required for this GitHub-to-Azure sync.
-After the workflow file and `AZURE_DEVOPS_PAT` secret are configured, do not
-run the PowerShell push command for normal updates. A regular `git push origin`
-automatically starts the GitHub Actions sync.
+The local `watch-and-push.py` utility can push changes to GitHub automatically.
+The GitHub Actions workflow then mirrors GitHub to the Azure Repos repository
+`Pipelines`. The sync direction is intentionally one-way:
+`local machine -> GitHub -> Azure Repos`.
 
 ## 🔐 Security Notes
 

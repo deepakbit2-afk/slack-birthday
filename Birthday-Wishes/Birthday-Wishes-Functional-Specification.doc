@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Birthday Wishes Automation - Functional Specification</title>
+<style>
+body { font-family: Aptos, Calibri, Arial; color:#243447; margin:36px; line-height:1.35; }
+h1 { color:#0f5b78; font-size:28px; border-bottom:3px solid #0f5b78; padding-bottom:8px; }
+h2 { color:#0f5b78; font-size:18px; border-bottom:1px solid #b7c9d3; padding-bottom:3px; margin-top:24px; }
+h3 { color:#276678; font-size:14px; }
+.subtitle { color:#527180; font-size:16px; }
+.meta { background:#eaf3f6; padding:12px; border-left:5px solid #0f5b78; }
+table { border-collapse:collapse; width:100%; margin:10px 0 16px; }
+th { background:#0f5b78; color:white; padding:7px; text-align:left; }
+td { border:1px solid #b7c9d3; padding:7px; vertical-align:top; }
+.arch td { text-align:center; height:70px; font-weight:bold; background:#eaf3f6; }
+.arch .arrow { width:4%; background:white; border:0; font-size:24px; color:#0f5b78; }
+.must { background:#e7f4ea; }
+.optional { background:#fff5d9; }
+.notneeded { background:#fbe9e7; }
+code, pre { font-family: Consolas, monospace; background:#f3f5f6; padding:4px; }
+.small { font-size:10px; color:#527180; }
+</style>
+</head>
+<body>
+<h1>FUNCTIONAL SPECIFICATION</h1>
+<div class="subtitle">Birthday Wishes Automation</div>
+<p>Professional system definition, architecture, operational requirements, and implementation classification</p>
+<div class="meta"><b>Version:</b> 1.0 &nbsp; | &nbsp; <b>Status:</b> Current implementation specification &nbsp; | &nbsp; <b>Date:</b> 13 September 2026</div>
+
+<h2>1. Executive Summary</h2>
+<p>The Birthday Wishes Automation system reads employee names and dates of birth from a CSV file, identifies employees whose birthday is today, and sends a personalized birthday message to a configured Slack channel. It runs locally on Windows or automatically through an Azure DevOps scheduled pipeline.</p>
+
+<h2>2. Architecture Overview</h2>
+<p>The solution is a lightweight scheduled batch process. Source data and code are version-controlled, Azure DevOps provides scheduling and execution, and Slack is the external notification endpoint.</p>
+<table class="arch"><tr><td>SOURCE<br>employees.csv<br>Python code</td><td class="arrow">-&gt;</td><td>PROCESSING<br>Azure pipeline<br>Windows agent<br>PySpark filter</td><td class="arrow">-&gt;</td><td>DELIVERY<br>Slack webhook<br>Birthday message</td><td class="arrow">-&gt;</td><td>CONTROL<br>Logs<br>Exit status<br>Daily schedule</td></tr></table>
+<p><b>Data flow:</b> CSV data -&gt; scheduled job -&gt; month/day filter -&gt; Slack webhook -&gt; pipeline logs.</p>
+
+<h2>3. Objective and Scope</h2>
+<p><b>Objective:</b> recognize employee birthdays consistently without manually checking the employee list or composing messages.</p>
+<table><tr><th>In scope</th><th>Out of scope</th></tr><tr><td>CSV input and validation<br>Month/day birthday matching<br>Slack Incoming Webhook<br>Daily Azure execution<br>Windows self-hosted agent<br>Print-only demo output</td><td>Email or direct Slack messages<br>Database storage<br>Employee user interface<br>Updating records from Slack<br>Automatic per-message retry policy</td></tr></table>
+
+<h2>4. Functional Requirements</h2>
+<table><tr><th>ID</th><th>Requirement</th><th>Expected behavior</th></tr>
+<tr><td>FR-01</td><td>Configuration</td><td>Read <code>SLACK_WEBHOOK_URL</code>, <code>CSV_PATH</code>, and optional <code>DEMO_DAILY_BIRTHDAY_NAME</code>.</td></tr>
+<tr><td>FR-02</td><td>Input</td><td>Read <code>data/employees.csv</code>; <code>name</code> and <code>dob</code> are required, <code>email</code> is optional.</td></tr>
+<tr><td>FR-03</td><td>Validation</td><td>Fail clearly for an unreadable CSV or missing required columns.</td></tr>
+<tr><td>FR-04</td><td>Matching</td><td>Compare only month and day of <code>dob</code> with the current date; ignore birth year.</td></tr>
+<tr><td>FR-05</td><td>Notification</td><td>Send one JSON POST to Slack for every matching real employee.</td></tr>
+<tr><td>FR-06</td><td>Exit status</td><td>Return success on completion; return failure when message delivery fails.</td></tr>
+<tr><td>FR-07</td><td>Logging</td><td>Log date, counts, matches, delivery totals, warnings, and errors without secrets.</td></tr>
+<tr><td>FR-08</td><td>Demo mode</td><td>Print a configured demo name for testing, but never send it to Slack.</td></tr>
+</table>
+
+<h2>5. Data Specification</h2>
+<p>Default file: <code>data/employees.csv</code></p>
+<pre>name,dob,email
+John Smith,1990-09-01,john.smith@example.com</pre>
+<table><tr><th>Field</th><th>Required</th><th>Format</th><th>Use</th></tr><tr><td>name</td><td>Yes</td><td>Text</td><td>Name in birthday message.</td></tr><tr><td>dob</td><td>Yes</td><td>YYYY-MM-DD</td><td>Month/day matching.</td></tr><tr><td>email</td><td>No</td><td>Email text</td><td>Retained but not used for delivery.</td></tr></table>
+
+<h2>6. Operational Workflow</h2>
+<ol><li>Azure DevOps checks out the repository.</li><li>Windows self-hosted agent starts the job from the Birthday-Wishes folder.</li><li>Python dependencies are installed.</li><li>CSV is loaded and today's birthdays are calculated.</li><li>Real matching employees receive Slack messages.</li><li>Logs and exit status are published to the pipeline run.</li></ol>
+<p>Current schedule: <b>03:00 UTC daily</b>. The Windows host must be powered on, online, and have the agent online.</p>
+
+<h2>7. Necessary, Optional, and Not Required</h2>
+<table><tr><th>Component</th><th>Classification</th><th>Professional rationale</th></tr>
+<tr class="must"><td><code>src/birthday_wishes.py</code></td><td><b>NECESSARY</b></td><td>Core filtering, Slack delivery, logging, and exit status.</td></tr>
+<tr class="must"><td><code>data/employees.csv</code></td><td><b>NECESSARY</b></td><td>Employee source data.</td></tr>
+<tr class="must"><td><code>requirements.txt</code></td><td><b>NECESSARY</b></td><td>PySpark, pandas, requests, and dotenv dependencies.</td></tr>
+<tr class="must"><td><code>azure-pipelines.yml</code></td><td><b>NECESSARY FOR AUTOMATION</b></td><td>Daily schedule and Windows agent execution.</td></tr>
+<tr class="must"><td><code>SLACK_WEBHOOK_URL</code></td><td><b>NECESSARY FOR SLACK</b></td><td>Secret credential required for notification delivery.</td></tr>
+<tr class="must"><td>Windows self-hosted agent</td><td><b>NECESSARY FOR CURRENT SETUP</b></td><td>Runs the pipeline because hosted parallelism is unavailable.</td></tr>
+<tr class="optional"><td><code>Functional-Specification.md</code></td><td><b>RECOMMENDED</b></td><td>Requirements and traceability documentation.</td></tr>
+<tr class="optional"><td><code>azure-pipelines-validation.yml</code></td><td><b>RECOMMENDED</b></td><td>Validates changes without sending Slack messages.</td></tr>
+<tr class="optional"><td><code>DEMO_DAILY_BIRTHDAY_NAME</code></td><td><b>TEST ONLY</b></td><td>Print-only daily verification; remove for production.</td></tr>
+<tr class="notneeded"><td>Service Principal</td><td><b>NOT REQUIRED</b></td><td>Current pipeline does not deploy or manage Azure resources.</td></tr>
+<tr class="notneeded"><td>Repository synchronization utilities</td><td><b>NOT REQUIRED</b></td><td>Azure already contains the source code and is the pipeline source.</td></tr>
+<tr class="notneeded"><td>Database or web UI</td><td><b>NOT REQUIRED</b></td><td>Current design is file-based and batch-oriented.</td></tr>
+</table>
+
+<h2>8. Technical Component Specification</h2>
+<table><tr><th>Component</th><th>Technical responsibility</th><th>Inputs</th><th>Outputs / side effects</th></tr>
+<tr><td><code>src/birthday_wishes.py</code></td><td>Creates Spark, loads pandas CSV data, filters month/day, posts Slack messages, and controls exit status.</td><td>Environment variables and CSV.</td><td>Console logs, Slack POST requests, process exit code.</td></tr>
+<tr><td><code>data/employees.csv</code></td><td>Stores employee records used for birthday matching.</td><td>Maintained CSV rows.</td><td>Birthday candidates.</td></tr>
+<tr><td><code>requirements.txt</code></td><td>Defines PySpark, requests, pandas, and dotenv dependencies.</td><td>Pip installation.</td><td>Reproducible Python environment.</td></tr>
+<tr><td><code>azure-pipelines.yml</code></td><td>Defines daily schedule, self-hosted pool, dependency installation, secret mapping, and job execution.</td><td>Azure variables and checked-out code.</td><td>Pipeline run and logs.</td></tr>
+<tr><td><code>azure-pipelines-validation.yml</code></td><td>Performs CI checks without Slack delivery.</td><td>Repository changes.</td><td>Syntax validation result.</td></tr>
+</table>
+<h3>Runtime sequence</h3>
+<ol><li>Azure checks out the repository into the agent workspace.</li><li>The Windows agent runs PowerShell from the <code>Birthday-Wishes</code> directory.</li><li>Python dependencies are installed.</li><li><code>birthday_wishes.py</code> reads the CSV and creates the birthday DataFrame.</li><li>Matching real employees are posted to Slack.</li><li>Exit status determines the pipeline result.</li></ol>
+<p><b>Minimum production path:</b> <code>src/birthday_wishes.py</code>, <code>data/employees.csv</code>, <code>requirements.txt</code>, <code>azure-pipelines.yml</code>, an online Windows agent, and the secret <code>SLACK_WEBHOOK_URL</code>. Repository sync utilities and GitHub Actions mirroring are optional once Azure contains the source code.</p>
+
+<h2>9. Deployment Configuration</h2>
+<table><tr><th>Setting</th><th>Configured value</th></tr>
+<tr><td>Azure DevOps organization</td><td><code>Deepaksingh0643</code></td></tr>
+<tr><td>Azure DevOps project</td><td><code>Pipelines</code></td></tr>
+<tr><td>Azure Repos repository</td><td><code>Pipelines</code></td></tr>
+<tr><td>Pipeline YAML path</td><td><code>/Birthday-Wishes/azure-pipelines.yml</code></td></tr>
+<tr><td>Agent pool</td><td><code>Default</code> self-hosted Windows pool</td></tr>
+<tr><td>Schedule</td><td>Daily at 03:00 UTC</td></tr>
+<tr><td>Secret variable</td><td><code>SLACK_WEBHOOK_URL</code>, stored as secret</td></tr>
+</table>
+<p>The Slack Incoming Webhook URL is created in the Slack app's Incoming Webhooks settings and stored only in the Azure pipeline secret variable or local <code>.env</code> file. It must never be placed in source code or logs.</p>
+
+<h2>10. Technical and Security Requirements</h2>
+<ul><li>Python 3.11+ and Java 11, 17, or 21 on the Windows agent.</li><li>Internet access to Azure DevOps and Slack.</li><li>Pipeline variable <code>SLACK_WEBHOOK_URL</code> marked secret.</li><li>Webhook URLs and PATs must never be committed, logged, or placed in screenshots.</li><li>Keep <code>.env</code> ignored by Git. Revoke and replace exposed credentials.</li></ul>
+
+<h2>11. Error Handling</h2>
+<table><tr><th>Condition</th><th>Expected response</th></tr><tr><td>CSV missing/unreadable</td><td>Fail with a clear read error.</td></tr><tr><td>Required column missing</td><td>Fail with validation error.</td></tr><tr><td>No birthday today</td><td>Log information and exit successfully.</td></tr><tr><td>Webhook missing</td><td>Skip delivery, log warning, and return appropriate status.</td></tr><tr><td>Slack timeout/failure</td><td>Count failure and return nonzero status.</td></tr><tr><td>Agent offline</td><td>Pipeline cannot start until agent is online.</td></tr></table>
+
+<h2>12. Acceptance Criteria</h2>
+<ul><li>A valid employee whose month/day matches today is identified.</li><li>One Slack message is sent per matching real employee with a valid webhook.</li><li>No-birthday days complete successfully without a Slack request.</li><li>Demo mode prints a name but does not send a demo notification.</li><li>An online Windows agent executes the configured YAML steps.</li><li>The daily schedule starts when the host and agent are available.</li><li>No secret appears in source control or pipeline logs.</li></ul>
+
+<h2>13. Traceability</h2>
+<table><tr><th>Area</th><th>Implementation</th></tr><tr><td>Business logic</td><td><code>src/birthday_wishes.py</code></td></tr><tr><td>Employee source</td><td><code>data/employees.csv</code></td></tr><tr><td>Dependencies</td><td><code>requirements.txt</code></td></tr><tr><td>Scheduled execution</td><td><code>azure-pipelines.yml</code></td></tr><tr><td>Validation</td><td><code>azure-pipelines-validation.yml</code></td></tr><tr><td>Azure repository source</td><td>Azure Repos repository <code>Pipelines</code></td></tr></table>
+<p class="small">End of Functional Specification</p>
+</body>
+</html>
