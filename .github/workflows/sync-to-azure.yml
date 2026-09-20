@@ -36,13 +36,15 @@ jobs:
           echo "Azure target: $azure_url"
           echo "PAT received: yes"
 
-          encoded_auth="$(printf 'pat:%s' "$AZURE_DEVOPS_PAT" | base64 -w 0)"
+          encoded_auth="$(printf ':%s' "$AZURE_DEVOPS_PAT" | base64 -w 0)"
           auth_header="AUTHORIZATION: Basic $encoded_auth"
 
+          echo "Pushing branch $SOURCE_BRANCH to Azure Repos..."
           git -c credential.interactive=never \
             -c http.extraheader="$auth_header" \
             push "$azure_url" "HEAD:refs/heads/$SOURCE_BRANCH"
 
+          echo "Pushing tags to Azure Repos..."
           git -c credential.interactive=never \
             -c http.extraheader="$auth_header" \
             push "$azure_url" --tags
