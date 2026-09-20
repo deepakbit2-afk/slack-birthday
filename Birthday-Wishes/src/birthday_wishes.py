@@ -196,7 +196,7 @@ def run():
         print(f"[DEMO] Birthday today: {DEMO_DAILY_BIRTHDAY_NAME} (print-only; no Slack message)")
 
     if birthday_count == 0:
-        print("[INFO] No birthdays today. No messages to send. 🎈")
+        print("[INFO] No birthdays today. No messages to send.")
         spark.stop()
         sys.exit(0)
 
